@@ -15,7 +15,7 @@ PORT=3306
 DATABASE=""
 BACKUP_PATH="/home"
 COMPRESS=false  # Inicializar la flag de compresión
-SSL_MODE="DISABLED"  # SSL desactivado por defecto
+#SSL_MODE="TRUE"  # SSL desactivado por defecto
 
 # Procesar argumentos
 while [[ "$#" -gt 0 ]]; do
@@ -25,7 +25,7 @@ while [[ "$#" -gt 0 ]]; do
         --port) PORT="$2"; shift ;;     # Establecer el puerto y mover el puntero
         --database) DATABASE="$2"; shift ;;  # Establecer la base de datos y mover el puntero
         --path) BACKUP_PATH="$2"; shift ;; # Establecer la ruta donde se guardarán los respaldos
-        --ssl) SSL_MODE="REQUIRED" ;;  # Habilitar SSL si se pasa el flag
+        --ssl) SSL_MODE="FALSE" ;;  # Habilitar SSL si se pasa el flag
         *) echo "Opción desconocida: $1"; exit 1 ;;
     esac
     shift
@@ -43,12 +43,8 @@ while IFS=: read -r USER PASSWORD; do
     echo "Usando credenciales de usuario: $USER en el host: $HOST en el puerto: $PORT con SSL_MODE=$SSL_MODE"
 
     if [[ -z "$DATABASE" ]]; then
-        # Construir el comando dependiendo del modo SSL
-        if [[ "$SSL_MODE" = "REQUIRED" ]]; then
-            databases=$(mysql --host=${HOST} --port=${PORT} --user=${USER} --password=${PASSWORD} -e "SHOW DATABASES;" | grep -Ev "(Database|information_schema|performance_schema|mysql|sys)")
-        else
-            databases=$(mysql --host=${HOST} --port=${PORT} --user=${USER} --password=${PASSWORD} --skip-ssl -e "SHOW DATABASES;" | grep -Ev "(Database|information_schema|performance_schema|mysql|sys)")
-        fi
+        # Obtener la lista de bases de datos (excluir las del sistema)
+        databases=$(mysql --host=${HOST} --port=${PORT} --user=${USER} --password=${PASSWORD} --skip-ssl-verify-server-cert -e "SHOW DATABASES;" | grep -Ev "(Database|information_schema|performance_schema|mysql|sys)")
     else
         databases="$DATABASE"
     fi
@@ -62,11 +58,7 @@ while IFS=: read -r USER PASSWORD; do
         echo "Respaldo de la base de datos: $db para el usuario: $USER"
 
         # Hacer el dump de la base de datos
-        if [[ "$SSL_MODE" = "REQUIRED" ]]; then
-            mysqldump --host=${HOST} --port=${PORT} --user=${USER} --password=${PASSWORD} --databases $db > ${DB_BACKUP_DIR}/dump_${db}.sql
-        else
-            mysqldump --host=${HOST} --port=${PORT} --user=${USER} --password=${PASSWORD} --skip-ssl --databases $db > ${DB_BACKUP_DIR}/dump_${db}.sql
-        fi
+        mysqldump --host=${HOST} --port=${PORT} --user=${USER} --password=${PASSWORD} --skip-ssl-verify-server-cert --databases $db > ${DB_BACKUP_DIR}/dump_${db}.sql
 
         # Comprimir si el flag está activado
         if [ "$COMPRESS" = true ]; then
@@ -83,4 +75,3 @@ done < "$CRED_FILE"
 
 # Mensaje de finalización
 echo "Todos los backups han sido completados."
-
