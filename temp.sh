@@ -4,7 +4,7 @@
 CRED_FILE="db-credentials.txt"
 
 # Comprobar si se pasó un argumento para el archivo de credenciales
-if [[ $# -gt 0 && "$1" != --* ]]; then
+if [[ $# -gt 0 ]]; then
     CRED_FILE="$1"
     shift  # Mover a la siguiente opción
 fi
