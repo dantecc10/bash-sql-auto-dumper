@@ -3,31 +3,29 @@
 # Archivo de credenciales (por defecto)
 CRED_FILE="db-credentials.txt"
 
+# Comprobar si se pasó un argumento para el archivo de credenciales
+if [[ $# -gt 0 ]]; then
+    CRED_FILE="$1"
+    shift  # Mover a la siguiente opción
+fi
+
 # Inicializar variables por defecto
 HOST="localhost"
 PORT=3306
 DATABASE=""
 BACKUP_PATH="/home"
 COMPRESS=false  # Inicializar la flag de compresión
-SSL_MODE="DISABLED" # ssl desactivado por defecto
-
-# Comprobar si se pasó un argumento para el archivo de credenciales
-if [[ $# -gt 0 ]]; then
-    if [[ $1 != --* ]]; then
-        CRED_FILE="$1"
-        shift  # Mover a la siguiente opción
-    fi
-fi
+SSL_MODE="DISABLED"  # SSL desactivado por defecto
 
 # Procesar argumentos
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --compress) COMPRESS=true ;;  # Activa la compresión si se pasa el flag
-        --host) HOST="$2"; shift ;;   # Establecer el host y mover el puntero
-        --port) PORT="$2"; shift ;;   # Establecer el puerto y mover el puntero
+        --host) HOST="$2"; shift ;;    # Establecer el host y mover el puntero
+        --port) PORT="$2"; shift ;;     # Establecer el puerto y mover el puntero
         --database) DATABASE="$2"; shift ;;  # Establecer la base de datos y mover el puntero
-        --path) BACKUP_PATH="$2"; shift ;;   # Establecer la ruta donde se guardarán los respaldos
-	--ssl) SSL_MODE="REQUIRED" ;; # Habilitar SSL si se pasa el flag
+        --path) BACKUP_PATH="$2"; shift ;; # Establecer la ruta donde se guardarán los respaldos
+        --ssl) SSL_MODE="REQUIRED" ;;  # Habilitar SSL si se pasa el flag
         *) echo "Opción desconocida: $1"; exit 1 ;;
     esac
     shift
@@ -40,15 +38,9 @@ FECHA=$(date +"%Y-%m-%d_%H-%M-%S")
 # Crear el directorio de respaldo si no existe
 mkdir -p ${BACKUP_DIR}
 
-# Verificar si el archivo de credenciales existe
-if [[ ! -f "$CRED_FILE" ]]; then
-    echo "El archivo de credenciales no existe: $CRED_FILE"
-    exit 1
-fi
-
 # Leer credenciales del archivo
 while IFS=: read -r USER PASSWORD; do
-    echo "Usando credenciales de usuario: $USER en el host: $HOST en el puerto: $PORT"
+    echo "Usando credenciales de usuario: $USER en el host: $HOST en el puerto: $PORT con SSL_MODE=$SSL_MODE"
 
     if [[ -z "$DATABASE" ]]; then
         # Obtener la lista de bases de datos (excluir las del sistema)
