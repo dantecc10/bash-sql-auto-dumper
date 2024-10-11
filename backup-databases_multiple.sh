@@ -15,7 +15,7 @@ PORT=3306
 DATABASE=""
 BACKUP_PATH="/home"
 COMPRESS=false  # Inicializar la flag de compresión
-SSL_MODE="DISABLED"  # SSL desactivado por defecto
+SSL_MODE=DISABLED  # SSL desactivado por defecto
 
 # Procesar argumentos
 while [[ "$#" -gt 0 ]]; do
@@ -25,7 +25,7 @@ while [[ "$#" -gt 0 ]]; do
         --port) PORT="$2"; shift ;;     # Establecer el puerto y mover el puntero
         --database) DATABASE="$2"; shift ;;  # Establecer la base de datos y mover el puntero
         --path) BACKUP_PATH="$2"; shift ;; # Establecer la ruta donde se guardarán los respaldos
-        --ssl) SSL_MODE="REQUIRED" ;;  # Habilitar SSL si se pasa el flag
+        --ssl) SSL_MODE=REQUIRED ;;  # Habilitar SSL si se pasa el flag
         *) echo "Opción desconocida: $1"; exit 1 ;;
     esac
     shift
